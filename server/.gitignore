@@ -1,0 +1,4 @@
+.env
+.env.migrate
+
+/src/generated/prisma

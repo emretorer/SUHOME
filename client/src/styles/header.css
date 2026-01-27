@@ -1,0 +1,116 @@
+.header {
+    width: 100%;
+    background-color: #ffcc00;
+    padding: 12px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-ticker {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    background: #ffcc00;
+    padding: 6px 0;
+    border-top: 2px solid rgba(0,0,0,0.1);
+    border-bottom: 2px solid rgba(0,0,0,0.15);
+    animation: ticker 18s linear infinite;
+  }
+  
+  .ticker-track {
+    display: inline-block;
+    white-space: nowrap;
+    animation: ticker 18s linear infinite;
+  }
+  
+  .ticker-track span {
+    display: inline-block;
+    margin-right: 60px;
+    font-weight: 700;
+    color: #333;
+    font-size: 0.95rem;
+  }
+  
+  @keyframes ticker {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
+
+.header__container {
+    width: 90%;
+    max-width: 1300px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header__logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0058a3;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.header__logo img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.header__search {
+    flex: 1;
+    margin: 0 40px;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+
+.header__search input {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.header__search button {
+    background-color: #0058a3;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.header__actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.header__icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #0058a3;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.header__icon:hover {
+    color: #003d73;
+}

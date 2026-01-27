@@ -1,0 +1,33 @@
+substitutions:
+  _REGION: europe-west1
+  _SERVICE: suhome
+  _IMAGE: europe-west1-docker.pkg.dev/suhomenew/cs308/cs308
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_IMAGE}:${SHORT_SHA}", "."]
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_IMAGE}:${SHORT_SHA}"]
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "${_SERVICE}",
+        "--image",
+        "${_IMAGE}:${SHORT_SHA}",
+        "--region",
+        "${_REGION}",
+        "--platform",
+        "managed",
+        "--allow-unauthenticated",
+        "--set-cloudsql-instances",
+        "suhomenew:europe-west1:suhome-mysql",
+        "--set-env-vars",
+        'NODE_ENV=production,DB_USER=appuser,DB_PASSWORD=Suhome123!,DB_DATABASE=suhome,INSTANCE_CONNECTION_NAME=suhomenew:europe-west1:suhome-mysql,SMTP_HOST=smtp.gmail.com,SMTP_PORT=587,SMTP_USER=suhomedev@gmail.com,SMTP_PASS=vvebvrpccfdpbpnz,SMTP_FROM="SUHOME <suhomedev@gmail.com>"',
+      ]

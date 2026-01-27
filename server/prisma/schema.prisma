@@ -1,0 +1,449 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model cart_items {
+  cart_item_id Int      @id @default(autoincrement())
+  cart_id      Int
+  product_id   Int
+  quantity     Int
+  unit_price   Decimal  @db.Decimal(10, 2)
+  carts        carts    @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade, map: "cart_items_ibfk_1")
+  products     products @relation(fields: [product_id], references: [product_id], map: "cart_items_ibfk_2")
+
+  @@index([cart_id], map: "idx_cart_items_cart")
+  @@index([product_id], map: "idx_cart_items_product")
+}
+
+model carts {
+  cart_id    Int          @id @default(autoincrement())
+  cart_token String       @unique(map: "cart_token") @db.VarChar(190)
+  user_id    Int?
+  created_at DateTime     @default(now()) @db.DateTime(0)
+  updated_at DateTime?    @db.DateTime(0)
+  cart_items cart_items[]
+  users      users?       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "carts_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model categories {
+  category_id Int    @id @default(autoincrement())
+  name        String @unique(map: "name") @db.VarChar(100)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model comments {
+  comment_id   Int             @id @default(autoincrement())
+  user_id      Int
+  product_id   Int
+  rating       Int?
+  comment_text String?         @db.Text
+  status       comments_status @default(pending)
+  created_at   DateTime?       @default(now()) @db.Timestamp(0)
+  users        users           @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "comments_ibfk_1")
+  products     products        @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction, map: "comments_ibfk_2")
+
+  @@unique([user_id, product_id], map: "uniq_user_product")
+  @@index([product_id], map: "product_id")
+}
+
+model deliveries {
+  delivery_id      Int          @id @default(autoincrement())
+  order_id         Int
+  order_item_id    Int?
+  customer_id      Int?
+  product_id       Int?
+  quantity         Int?
+  total_price      Decimal?     @db.Decimal(10, 2)
+  delivery_address String?      @db.VarChar(255)
+  delivery_status  String?      @db.VarChar(50)
+  orders           orders       @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction, map: "deliveries_ibfk_1")
+  order_items      order_items? @relation(fields: [order_item_id], references: [order_item_id], onDelete: NoAction, onUpdate: NoAction, map: "deliveries_ibfk_2")
+  users            users?       @relation(fields: [customer_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "deliveries_ibfk_3")
+  products         products?    @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction, map: "deliveries_ibfk_4")
+
+  @@index([customer_id], map: "customer_id")
+  @@index([order_id], map: "order_id")
+  @@index([order_item_id], map: "order_item_id")
+  @@index([product_id], map: "product_id")
+}
+
+model discount_products {
+  discount_id Int
+  product_id  Int
+  is_active   Boolean   @default(true)
+  discounts   discounts @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade, map: "discount_products_ibfk_1")
+  products    products  @relation(fields: [product_id], references: [product_id], onDelete: Cascade, map: "discount_products_ibfk_2")
+
+  @@id([discount_id, product_id])
+  @@index([product_id], map: "product_id")
+}
+
+model discounts {
+  discount_id       Int                 @id @default(autoincrement())
+  code              String              @unique(map: "code") @db.VarChar(50)
+  type              discounts_type
+  value             Decimal             @db.Decimal(10, 2)
+  start_at          DateTime            @db.DateTime(0)
+  end_at            DateTime            @db.DateTime(0)
+  status            discounts_status    @default(active)
+  discount_products discount_products[]
+}
+
+model invoices {
+  invoice_id Int             @id @default(autoincrement())
+  order_id   Int
+  issued_at  DateTime        @default(now()) @db.DateTime(0)
+  amount     Decimal         @db.Decimal(10, 2)
+  status     invoices_status
+  orders     orders          @relation(fields: [order_id], references: [order_id], map: "invoices_ibfk_1")
+
+  @@index([order_id], map: "order_id")
+}
+
+model main_categories {
+  main_category_id        Int                       @id @default(autoincrement())
+  name                    String                    @unique(map: "name") @db.VarChar(100)
+  product_main_categories product_main_categories[]
+}
+
+model order_items {
+  order_item_id   Int               @id @default(autoincrement())
+  order_id        Int
+  product_id      Int
+  quantity        Int
+  unit_price      Decimal           @db.Decimal(10, 2)
+  deliveries      deliveries[]
+  orders          orders            @relation(fields: [order_id], references: [order_id], onDelete: Cascade, map: "order_items_ibfk_1")
+  products        products          @relation(fields: [product_id], references: [product_id], map: "order_items_ibfk_2")
+  return_requests return_requests[]
+
+  @@index([order_id], map: "idx_order_items_order")
+  @@index([product_id], map: "idx_order_items_product")
+}
+
+model orders {
+  order_id              Int                     @id @default(autoincrement())
+  user_id               Int
+  order_date            DateTime                @default(now()) @db.DateTime(0)
+  status                orders_status
+  total_amount          Decimal                 @db.Decimal(10, 2)
+  shipping_address      String?                 @db.Text
+  billing_address       String?                 @db.Text
+  deliveries            deliveries[]
+  invoices              invoices[]
+  order_items           order_items[]
+  users                 users                   @relation(fields: [user_id], references: [user_id], map: "orders_ibfk_1")
+  payments              payments[]
+  support_conversations support_conversations[]
+
+  @@index([user_id], map: "idx_orders_user")
+}
+
+model password_resets {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token_hash String   @db.VarChar(255)
+  expires_at DateTime @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "password_resets_ibfk_1")
+
+  @@index([token_hash], map: "idx_reset_token")
+  @@index([user_id], map: "user_id")
+}
+
+model payments {
+  payment_id      Int             @id @default(autoincrement())
+  order_id        Int
+  user_id         Int
+  amount          Decimal         @db.Decimal(10, 2)
+  method          payments_method
+  status          payments_status
+  paid_at         DateTime?       @db.DateTime(0)
+  transaction_ref String?         @db.VarChar(100)
+  card_holder_enc String?         @db.Text
+  card_number_enc String?         @db.Text
+  card_expiry_enc String?         @db.Text
+  card_last4      String?         @db.VarChar(4)
+  orders          orders          @relation(fields: [order_id], references: [order_id], map: "payments_ibfk_1")
+  users           users           @relation(fields: [user_id], references: [user_id], map: "payments_ibfk_2")
+  refunds         refunds[]
+
+  @@unique([order_id, transaction_ref], map: "uniq_payment_order_ref")
+  @@index([order_id], map: "idx_payments_order")
+  @@index([user_id], map: "user_id")
+}
+
+model product_costs {
+  cost_id        Int       @id @default(autoincrement())
+  product_id     Int       @unique(map: "uq_product_costs_product")
+  cost           Decimal   @db.Decimal(10, 2)
+  effective_from DateTime  @db.DateTime(0)
+  effective_to   DateTime? @db.DateTime(0)
+  products       products  @relation(fields: [product_id], references: [product_id], onDelete: Cascade, map: "fk_product_costs_product")
+
+  @@index([product_id, effective_from], map: "idx_product_costs_product")
+}
+
+model product_main_categories {
+  product_id       Int
+  main_category_id Int
+  products         products        @relation(fields: [product_id], references: [product_id], onDelete: Cascade, map: "product_main_categories_ibfk_1")
+  main_categories  main_categories @relation(fields: [main_category_id], references: [main_category_id], onDelete: Cascade, map: "product_main_categories_ibfk_2")
+
+  @@id([product_id, main_category_id])
+  @@index([main_category_id], map: "main_category_id")
+}
+
+model product_requests {
+  request_id            Int                     @id @default(autoincrement())
+  product_name          String                  @db.VarChar(150)
+  product_model         String?                 @db.VarChar(150)
+  product_main_category String?                 @db.VarChar(150)
+  product_category      String?                 @db.VarChar(100)
+  product_material      String?                 @db.VarChar(100)
+  product_color         String?                 @db.VarChar(100)
+  product_warranty      String?                 @db.VarChar(150)
+  product_distributor   String?                 @db.VarChar(150)
+  product_features      String?                 @db.Text
+  product_stock         Int                     @default(0)
+  product_image         String?                 @db.VarChar(255)
+  product_price         Decimal?                @db.Decimal(10, 2)
+  status                product_requests_status @default(pending)
+  requested_at          DateTime                @default(now()) @db.DateTime(0)
+  published_at          DateTime?               @db.DateTime(0)
+  product_cost          Decimal?                @db.Decimal(10, 2)
+
+  @@index([status], map: "idx_product_requests_status")
+}
+
+model products {
+  product_id              Int                       @id
+  product_name            String?                   @db.VarChar(255)
+  product_main_category   String?                   @db.VarChar(255)
+  product_category        String?                   @db.VarChar(255)
+  product_material        String?                   @db.VarChar(255)
+  product_color           String?                   @db.VarChar(255)
+  product_warranty        String?                   @db.VarChar(255)
+  product_distributor     String?                   @db.VarChar(255)
+  product_features        String?                   @db.VarChar(255)
+  product_stock           Int?
+  product_price           Int?
+  product_image           String?                   @db.VarChar(255)
+  product_rating          Decimal                   @default(0.0) @db.Decimal(3, 1)
+  rating_count            Int                       @default(0)
+  product_model           String?                   @db.VarChar(255)
+  product_serial_number   String?                   @db.VarChar(255)
+  cart_items              cart_items[]
+  comments                comments[]
+  deliveries              deliveries[]
+  discount_products       discount_products[]
+  order_items             order_items[]
+  product_costs           product_costs?
+  product_main_categories product_main_categories[]
+  wishlist_items          wishlist_items[]
+}
+
+model refunds {
+  refund_id       Int              @id @default(autoincrement())
+  payment_id      Int
+  return_id       Int?
+  amount          Decimal          @db.Decimal(10, 2)
+  status          refunds_status
+  processed_at    DateTime?        @db.DateTime(0)
+  payments        payments         @relation(fields: [payment_id], references: [payment_id], map: "refunds_ibfk_1")
+  return_requests return_requests? @relation(fields: [return_id], references: [return_id], map: "refunds_ibfk_2")
+
+  @@index([payment_id], map: "payment_id")
+  @@index([return_id], map: "return_id")
+}
+
+model return_requests {
+  return_id     Int                    @id @default(autoincrement())
+  order_item_id Int
+  user_id       Int
+  reason        String?                @db.Text
+  status        return_requests_status
+  requested_at  DateTime               @default(now()) @db.DateTime(0)
+  processed_at  DateTime?              @db.DateTime(0)
+  refunds       refunds[]
+  order_items   order_items            @relation(fields: [order_item_id], references: [order_item_id], map: "return_requests_ibfk_1")
+  users         users                  @relation(fields: [user_id], references: [user_id], map: "return_requests_ibfk_2")
+
+  @@index([order_item_id], map: "idx_returns_item")
+  @@index([user_id], map: "user_id")
+}
+
+model roles {
+  role_id   Int    @id @default(autoincrement())
+  role_name String @db.VarChar(100)
+}
+
+model support_attachments {
+  attachment_id    Int              @id @default(autoincrement())
+  message_id       Int
+  file_name        String           @db.VarChar(255)
+  mime_type        String?          @db.VarChar(100)
+  url              String           @db.VarChar(500)
+  uploaded_at      DateTime         @default(now()) @db.DateTime(0)
+  support_messages support_messages @relation(fields: [message_id], references: [message_id], onDelete: Cascade, map: "support_attachments_ibfk_1")
+
+  @@index([message_id], map: "message_id")
+}
+
+model support_conversations {
+  conversation_id                                     Int                          @id @default(autoincrement())
+  user_id                                             Int
+  order_id                                            Int?
+  status                                              support_conversations_status @default(open)
+  created_at                                          DateTime                     @default(now()) @db.DateTime(0)
+  assigned_user_id                                    Int?
+  users_support_conversations_assigned_user_idTousers users?                       @relation("support_conversations_assigned_user_idTousers", fields: [assigned_user_id], references: [user_id], map: "fk_support_conversations_assigned")
+  users_support_conversations_user_idTousers          users                        @relation("support_conversations_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade, map: "support_conversations_ibfk_1")
+  orders                                              orders?                      @relation(fields: [order_id], references: [order_id], map: "support_conversations_ibfk_2")
+  support_messages                                    support_messages[]
+
+  @@index([assigned_user_id], map: "idx_support_conversations_assigned")
+  @@index([order_id], map: "order_id")
+  @@index([user_id], map: "user_id")
+}
+
+model support_messages {
+  message_id            Int                   @id @default(autoincrement())
+  conversation_id       Int
+  sender_id             Int
+  message_text          String                @db.Text
+  created_at            DateTime              @default(now()) @db.DateTime(0)
+  is_read_by_support    Boolean               @default(false)
+  support_attachments   support_attachments[]
+  support_conversations support_conversations @relation(fields: [conversation_id], references: [conversation_id], onDelete: Cascade, map: "support_messages_ibfk_1")
+  users                 users                 @relation(fields: [sender_id], references: [user_id], map: "support_messages_ibfk_2")
+
+  @@index([conversation_id], map: "conversation_id")
+  @@index([sender_id], map: "sender_id")
+}
+
+model users {
+  user_id                                                             Int                     @id @default(autoincrement())
+  full_name                                                           String                  @db.VarChar(150)
+  email                                                               String                  @unique(map: "email") @db.VarChar(190)
+  password_hash                                                       String                  @db.VarChar(255)
+  home_address                                                        String?                 @db.VarChar(500)
+  tax_id                                                              String?                 @unique(map: "tax_id") @db.VarChar(20)
+  carts                                                               carts[]
+  comments                                                            comments[]
+  deliveries                                                          deliveries[]
+  orders                                                              orders[]
+  password_resets                                                     password_resets[]
+  payments                                                            payments[]
+  return_requests                                                     return_requests[]
+  support_conversations_support_conversations_assigned_user_idTousers support_conversations[] @relation("support_conversations_assigned_user_idTousers")
+  support_conversations_support_conversations_user_idTousers          support_conversations[] @relation("support_conversations_user_idTousers")
+  support_messages                                                    support_messages[]
+  wishlists                                                           wishlists?
+}
+
+model wishlist_items {
+  wishlist_item_id Int       @id @default(autoincrement())
+  wishlist_id      Int
+  product_id       Int
+  added_at         DateTime  @default(now()) @db.DateTime(0)
+  wishlists        wishlists @relation(fields: [wishlist_id], references: [wishlist_id], onDelete: Cascade, map: "wishlist_items_ibfk_1")
+  products         products  @relation(fields: [product_id], references: [product_id], map: "wishlist_items_ibfk_2")
+
+  @@index([product_id], map: "idx_wishlist_items_product")
+  @@index([wishlist_id], map: "wishlist_id")
+}
+
+model wishlists {
+  wishlist_id    Int              @id @default(autoincrement())
+  user_id        Int              @unique(map: "uniq_wishlists_user")
+  created_at     DateTime         @default(now()) @db.DateTime(0)
+  wishlist_items wishlist_items[]
+  users          users            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "wishlists_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+enum discounts_type {
+  rate
+  amount
+}
+
+enum orders_status {
+  processing
+  confirmed
+  packed
+  shipped
+  delivered
+  cancelled
+  refund_waiting
+  refund_rejected
+  refunded
+  returned
+}
+
+enum support_conversations_status {
+  open
+  pending
+  closed
+}
+
+enum invoices_status {
+  issued
+  void
+  paid
+  refunded
+}
+
+enum payments_method {
+  card
+  transfer
+  cod
+  wallet
+}
+
+enum refunds_status {
+  initiated
+  completed
+  failed
+}
+
+enum return_requests_status {
+  requested
+  accepted
+  rejected
+  received
+  refunded
+}
+
+enum comments_status {
+  pending
+  approved
+  rejected
+}
+
+enum payments_status {
+  initiated
+  authorized
+  captured
+  failed
+  refunded
+}
+
+enum discounts_status {
+  active
+  expired
+  paused
+}
+
+enum product_requests_status {
+  pending
+  published
+}
