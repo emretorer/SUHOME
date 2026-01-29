@@ -441,8 +441,8 @@ function ProductDetail({ openMiniCart }) {
               </div>
 
               <div style={stars}>
-                {"?".repeat(Number(c.rating) || 0)}
-                {"?".repeat(5 - (Number(c.rating) || 0))}
+                {"★".repeat(Number(c.rating) || 0)}
+                {"☆".repeat(5 - (Number(c.rating) || 0))}
               </div>
 
               {c.comment_text ? (

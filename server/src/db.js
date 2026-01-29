@@ -40,18 +40,21 @@ const dbConfig = socketPath
   ? { ...baseConfig, socketPath }
   : { ...baseConfig, host: DB_HOST, port: dbPort ?? 3306 };
 
-const db = mysql.createConnection(dbConfig);
+const db = mysql.createPool({
+  ...dbConfig,
+  connectionLimit: Number(process.env.DB_POOL_SIZE) || 10,
+});
 
-// DATABASE CONNECTION
-db.connect((err) => {
+db.getConnection((err, connection) => {
   if (err) {
-    console.error("❌ MySQL bağlantı hatası:", err);
-  } else {
-    const target =
-      socketPath ??
-      `${DB_HOST ?? "localhost"}:${dbConfig.port ?? ""}`.replace(/:$/, "");
-    console.log(`✅ MySQL'e bağlanıldı! target=${target} db=${resolvedDatabase} user=${DB_USER ?? "unknown"}`);
+    console.error("MySQL connection error:", err);
+    return;
   }
+  const target =
+    socketPath ??
+    `${DB_HOST ?? "localhost"}:${dbConfig.port ?? ""}`.replace(/:$/, "");
+  console.log(`MySQL connected. target=${target} db=${resolvedDatabase} user=${DB_USER ?? "unknown"}`);
+  connection.release();
 });
 
 export default db;
