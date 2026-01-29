@@ -20,25 +20,6 @@ function buildDemoTaxId(email) {
   return digits.slice(0, 11).padEnd(11, "0");
 }
 
-const RESET_TABLE_SQL = `
-  CREATE TABLE IF NOT EXISTS password_resets (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    token_hash VARCHAR(255) NOT NULL,
-    expires_at DATETIME NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_reset_token (token_hash),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-      ON UPDATE CASCADE ON DELETE CASCADE
-  )
-`;
-
-db.query(RESET_TABLE_SQL, (err) => {
-  if (err) {
-    console.error("password_resets table init failed:", err);
-  }
-});
-
 function normalizeUser(row) {
   return {
     id: row.user_id,
