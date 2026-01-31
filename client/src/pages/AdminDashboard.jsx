@@ -308,6 +308,16 @@ function AdminDashboard() {
   const productListRef = useRef(null);
   const productFormRef = useRef(null);
   const pmEditRef = useRef(null);
+  const pmDetailsRef = useRef(null);
+  const pmCostRef = useRef(null);
+  const mainCategoriesRef = useRef(null);
+  const categoriesRef = useRef(null);
+  const salesPendingRef = useRef(null);
+  const salesPublishedRef = useRef(null);
+  const salesReturnsRef = useRef(null);
+  const salesPriceRef = useRef(null);
+  const salesInvoicesRef = useRef(null);
+  const salesRevenueRef = useRef(null);
   const replyFileInputRef = useRef(null);
 
   useEffect(() => {
@@ -1875,12 +1885,44 @@ function AdminDashboard() {
     cursor: "pointer",
   });
 
+  const handleDrawerJump = (ref) => {
+    if (!ref?.current) return;
+    ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const sections = [
     { id: "dashboard", label: "Overview" },
     { id: "product", label: "Product Manager" },
     { id: "sales", label: "Sales Manager" },
     { id: "support", label: "Support" },
   ].filter((s) => permittedSections.includes(s.id));
+
+  const productDrawerLinks = useMemo(() => {
+    if (activeSection !== "product") return [];
+    const links = [
+      { id: "product-form", label: user?.role === "product_manager" ? "Add product request" : "Add product", ref: productFormRef },
+    ];
+    if (user?.role === "product_manager") {
+      links.push({ id: "pm-requests", label: "My product requests", ref: pmEditRef });
+      links.push({ id: "pm-details", label: "Update product details", ref: pmDetailsRef });
+      links.push({ id: "pm-cost", label: "Update product cost", ref: pmCostRef });
+    }
+    links.push({ id: "main-categories", label: "Main categories", ref: mainCategoriesRef });
+    links.push({ id: "categories", label: "Categories", ref: categoriesRef });
+    return links;
+  }, [activeSection, user?.role]);
+
+  const salesDrawerLinks = useMemo(() => {
+    if (activeSection !== "sales") return [];
+    return [
+      { id: "sales-pending", label: "Pending product requests", ref: salesPendingRef },
+      { id: "sales-published", label: "Published product requests", ref: salesPublishedRef },
+      { id: "sales-returns", label: "Return requests", ref: salesReturnsRef },
+      { id: "sales-price", label: "Price & Discount", ref: salesPriceRef },
+      { id: "sales-invoices", label: "Invoices", ref: salesInvoicesRef },
+      { id: "sales-revenue", label: "Revenue & profit/loss", ref: salesRevenueRef },
+    ];
+  }, [activeSection]);
 
   return (
     <div
@@ -1934,6 +1976,114 @@ function AdminDashboard() {
               {s.label}
             </button>
           ))}
+          {sections.length > 1 && (
+            <div
+              style={{
+                marginTop: 6,
+                padding: 10,
+                borderRadius: 12,
+                border: "1px dashed #cbd5e1",
+                background: "#f8fafc",
+                display: "grid",
+                gap: 8,
+              }}
+            >
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#64748b" }}>Quick access</span>
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
+                {sections.map((s) => (
+                  <button
+                    key={`${s.id}-drawer`}
+                    type="button"
+                    onClick={() => setActiveSection(s.id)}
+                    style={{
+                      border: "1px solid #e5e7eb",
+                      background: activeSection === s.id ? "#0f172a" : "white",
+                      color: activeSection === s.id ? "white" : "#0f172a",
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      cursor: "pointer",
+                      fontWeight: 700,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {productDrawerLinks.length > 0 && (
+            <div
+              style={{
+                marginTop: 6,
+                padding: 12,
+                borderRadius: 12,
+                border: "1px solid #e2e8f0",
+                background: "#ffffff",
+                display: "grid",
+                gap: 10,
+              }}
+            >
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#64748b" }}>Product sections</span>
+              <div style={{ display: "grid", gap: 8 }}>
+                {productDrawerLinks.map((link) => (
+                  <button
+                    key={link.id}
+                    type="button"
+                    onClick={() => handleDrawerJump(link.ref)}
+                    style={{
+                      textAlign: "left",
+                      border: "1px solid #e5e7eb",
+                      background: "white",
+                      color: "#0f172a",
+                      padding: "8px 10px",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {salesDrawerLinks.length > 0 && (
+            <div
+              style={{
+                marginTop: 10,
+                padding: 12,
+                borderRadius: 12,
+                border: "1px solid #e2e8f0",
+                background: "#ffffff",
+                display: "grid",
+                gap: 10,
+              }}
+            >
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#64748b" }}>Sales sections</span>
+              <div style={{ display: "grid", gap: 8 }}>
+                {salesDrawerLinks.map((link) => (
+                  <button
+                    key={link.id}
+                    type="button"
+                    onClick={() => handleDrawerJump(link.ref)}
+                    style={{
+                      textAlign: "left",
+                      border: "1px solid #e5e7eb",
+                      background: "white",
+                      color: "#0f172a",
+                      padding: "8px 10px",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </aside>
 
         <main
@@ -2335,6 +2485,7 @@ function AdminDashboard() {
 
               {user?.role === "product_manager" && (
                 <div
+                  ref={pmDetailsRef}
                   style={{
                     background: "white",
                     borderRadius: 14,
@@ -2541,6 +2692,7 @@ function AdminDashboard() {
 
               {user?.role === "product_manager" && (
                 <div
+                  ref={pmCostRef}
                   style={{
                     background: "white",
                     borderRadius: 14,
@@ -2596,6 +2748,7 @@ function AdminDashboard() {
               )}
 
               <div
+                ref={mainCategoriesRef}
                 style={{
                   background: "white",
                   borderRadius: 14,
@@ -2683,6 +2836,7 @@ function AdminDashboard() {
               </div>
 
               <div
+                ref={categoriesRef}
                 style={{
                   background: "white",
                   borderRadius: 14,
@@ -3270,7 +3424,10 @@ function AdminDashboard() {
 
           {activeSection === "sales" && (
             <section style={{ display: "grid", gap: 18 }}>
-              <div style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}>
+              <div
+                ref={salesPendingRef}
+                style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}
+              >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <h3 style={{ margin: 0, color: "#0f172a" }}>Pending product requests</h3>
                   <span style={{ color: "#94a3b8", fontWeight: 700 }}>{productRequests.length} total</span>
@@ -3332,7 +3489,10 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              <div style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}>
+              <div
+                ref={salesPublishedRef}
+                style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}
+              >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <h3 style={{ margin: 0, color: "#0f172a" }}>Published product requests</h3>
                   <span style={{ color: "#94a3b8", fontWeight: 700 }}>{publishedProductRequests.length} total</span>
@@ -3373,7 +3533,10 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              <div style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}>
+              <div
+                ref={salesReturnsRef}
+                style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}
+              >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <h3 style={{ margin: 0, color: "#0f172a" }}>Return requests</h3>
                   <span style={{ color: "#94a3b8", fontWeight: 700 }}>{returnRequests.length} total</span>
@@ -3506,7 +3669,10 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              <div style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}>
+              <div
+                ref={salesPriceRef}
+                style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}
+              >
                 <h3 style={{ margin: "0 0 10px", color: "#0f172a" }}>Price & Discount</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
                   <select
@@ -3571,7 +3737,10 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              <div style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}>
+              <div
+                ref={salesInvoicesRef}
+                style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 12 }}
+              >
                 <h3 style={{ margin: "0 0 6px", color: "#0f172a" }}>Invoices (filter)</h3>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                   <input
@@ -3628,7 +3797,10 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              <div style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 16 }}>
+              <div
+                ref={salesRevenueRef}
+                style={{ background: "white", borderRadius: 14, padding: 18, boxShadow: "0 14px 30px rgba(0,0,0,0.05)", display: "grid", gap: 16 }}
+              >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <h3 style={{ margin: 0, color: "#0f172a" }}>Revenue & profit/loss</h3>
                   <button type="button" style={linkBtn} onClick={handleLoadReport} disabled={isLoadingReport}>
